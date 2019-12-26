@@ -8,15 +8,25 @@ using RNDR.Services.Helpers;
 
 namespace RNDR.Services.UserManagement
 {
+
+    /// <summary>
+    /// Represent a user service
+    /// </summary>
     public class UserService : IUserService
     {
         private DataContext _context;
 
+
+        /// <summary>
+        /// Initialize a new instance of the <see cref="UserService"/> class with specified <see cref="DataContext"/>.
+        /// </summary>
+        /// <param name="context">A <see cref="DataContext"/>.</param>
         public UserService(DataContext context)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
+        /// <inheritdoc/>
         public User Authenticate(string username, string password)
         {
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
@@ -34,28 +44,29 @@ namespace RNDR.Services.UserManagement
             // authentication successful
         }
 
+        /// <inheritdoc/>
         public IEnumerable<User> GetAll()
         {
             return _context.Users;
         }
 
+        /// <inheritdoc/>
         public User GetById(int id)
         {
             return _context.Users.Find(id);
         }
 
+        /// <inheritdoc/>
         public User Create(User user, string password)
         {
             // validation
-            if (string.IsNullOrWhiteSpace(password))
-                throw new AppException("Password is required");
+            if (string.IsNullOrWhiteSpace(password)) throw new AppException("Password is required");
 
-            if (_context.Users.Any(x => x.Username == user.Username))
-                throw new AppException("Username \"" + user.Username + "\" is already taken");
+            if (_context.Users.Any(x => x.Username == user.Username)) throw new AppException("Username \"" + user.Username + "\" is already taken");
 
             CreatePasswordHash(password, out var passwordHash, out var passwordSalt);
 
-            user.Password = Convert.ToBase64String(passwordHash); //Convert.FromBase64String
+            user.Password = Convert.ToBase64String(passwordHash);
             user.PasswordSalt = passwordSalt;
 
             _context.Users.Add(user);
@@ -64,6 +75,7 @@ namespace RNDR.Services.UserManagement
             return user;
         }
 
+        /// <inheritdoc/>
         public void Update(User userParam, string password = null)
         {
             var user = _context.Users.Find(userParam.Id);
@@ -101,6 +113,7 @@ namespace RNDR.Services.UserManagement
             _context.SaveChanges();
         }
 
+        /// <inheritdoc/>
         public void Delete(int id)
         {
             var user = _context.Users.Find(id);
@@ -110,6 +123,13 @@ namespace RNDR.Services.UserManagement
         }
 
         #region private helper methods
+        
+        /// <summary>
+        /// Create password hash and uniq salt for new user.
+        /// </summary>
+        /// <param name="password">Clear password.</param>
+        /// <param name="passwordHash">Encrypted password.</param>
+        /// <param name="passwordSalt">Password's salt.</param>
         private static void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
         {
             if (password == null) throw new ArgumentNullException("password");
@@ -120,6 +140,13 @@ namespace RNDR.Services.UserManagement
             passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
         }
 
+        /// <summary>
+        /// Verify is entered password equals hashed ones.
+        /// </summary>
+        /// <param name="password">Entered password.</param>
+        /// <param name="storedHash">Hashed password.</param>
+        /// <param name="storedSalt">Uniq salt that were used to encrypt password.</param>
+        /// <returns>Is it corrected entered password.</returns>
         private static bool VerifyPasswordHash(string password, byte[] storedHash, byte[] storedSalt)
         {
             if (password == null) throw new ArgumentNullException("password");

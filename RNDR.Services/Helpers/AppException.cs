@@ -3,8 +3,9 @@ using System.Globalization;
 
 namespace RNDR.Services.Helpers
 {
-    // Custom exception class for throwing application specific exceptions (e.g. for validation) 
-    // that can be caught and handled within the application
+    /// <summary>
+    /// Custom exception class for throwing application specific exceptions (e.g. for validation) that can be caught and handled within the application
+    /// </summary>
     public class AppException : Exception
     {
         public AppException() : base("Internal app exception") { }
